@@ -3,211 +3,218 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Input Nilai Massal SD</title>
+  <title>Aplikasi E-Rapor SD - Penginputan Nilai Massal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans">
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
 
-  <div id="app" class="min-h-screen flex flex-col">
-    <!-- Header Navbar -->
-    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <div>
-          <h1 class="text-xl font-bold tracking-tight">E-Rapor SD (Input Massal)</h1>
-          <p class="text-xs text-indigo-200">Penginputan Nilai Per Mata Pelajaran</p>
-        </div>
-        <nav class="flex gap-2">
-          <button @click="activeTab = 'harian'" :class="{'bg-indigo-900': activeTab==='harian'}" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-600">Nilai Harian</button>
-          <button @click="activeTab = 'uts'" :class="{'bg-indigo-900': activeTab==='uts'}" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-600">Nilai UTS</button>
-          <button @click="activeTab = 'asas'" :class="{'bg-indigo-900': activeTab==='asas'}" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-600">Nilai ASAS</button>
-          <button @click="activeTab = 'laporan'; fetchLaporan()" :class="{'bg-indigo-900': activeTab==='laporan'}" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-600">Laporan & Analisis</button>
-        </nav>
+  <div id="app" class="min-h-screen flex flex-col md:flex-row">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col">
+      <div class="p-5 text-center font-bold text-lg text-white border-b border-slate-800 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-graduation-cap text-indigo-400"></i>
+        <span>E-RAPOR SD</span>
       </div>
-    </header>
+      <nav class="p-4 space-y-1 flex-grow">
+        <button @click="activeTab = 'harian'; loadDataMassal()" :class="{'bg-indigo-600 text-white': activeTab==='harian'}" class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition flex items-center gap-3">
+          <i class="fa-solid fa-book-open"></i> Nilai Harian
+        </button>
+        <button @click="activeTab = 'uts'; loadDataMassal()" :class="{'bg-indigo-600 text-white': activeTab==='uts'}" class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition flex items-center gap-3">
+          <i class="fa-solid fa-file-pen"></i> Nilai UTS
+        </button>
+        <button @click="activeTab = 'asas'; loadDataMassal()" :class="{'bg-indigo-600 text-white': activeTab==='asas'}" class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition flex items-center gap-3">
+          <i class="fa-solid fa-file-circle-check"></i> Nilai ASAS
+        </button>
+        <button @click="activeTab = 'laporan'; fetchLaporan()" :class="{'bg-indigo-600 text-white': activeTab==='laporan'}" class="w-full text-left px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition flex items-center gap-3">
+          <i class="fa-solid fa-chart-line"></i> Analisis & Laporan
+        </button>
+      </nav>
+      <div class="p-4 text-xs text-slate-500 border-t border-slate-800 text-center">
+        Tahun Ajaran 2026/2027
+      </div>
+    </aside>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
+    <!-- Main Content Area -->
+    <main class="flex-grow p-4 md:p-8 overflow-y-auto">
       
-      <!-- FILTER UTAMA (Kelas, Semester, Mapel) -->
-      <div v-if="activeTab !== 'laporan'" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">KELAS</label>
-          <select v-model="filter.kelas" @change="onKelasChange" class="w-full border rounded-lg p-2.5 bg-slate-50 font-medium">
-            <option value="Kelas 2">Kelas 2</option>
-            <option value="Kelas 4">Kelas 4</option>
-          </select>
+      <!-- Top Header & Filter Matriks -->
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+        <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
+          <h1 class="text-xl font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg text-base"><i class="fa-solid fa-sliders"></i></span>
+            Filter Penginputan Massal
+          </h1>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">SEMESTER</label>
-          <select v-model="filter.semester" class="w-full border rounded-lg p-2.5 bg-slate-50 font-medium">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">MATA PELAJARAN</label>
-          <select v-model="filter.mapel" class="w-full border rounded-lg p-2.5 bg-slate-50 font-medium">
-            <option v-for="m in listMapel" :key="m" :value="m">{{ m }}</option>
-          </select>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Kelas</label>
+            <select v-model="filter.kelas" @change="onKelasChange" class="w-full border rounded-xl p-2.5 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="Kelas 2">Kelas 2</option>
+              <option value="Kelas 4">Kelas 4</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Semester</label>
+            <select v-model="filter.semester" @change="loadDataMassal" class="w-full border rounded-xl p-2.5 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Mata Pelajaran</label>
+            <select v-model="filter.mapel" @change="loadDataMassal" class="w-full border rounded-xl p-2.5 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option v-for="m in listMapel" :key="m" :value="m">{{ m }}</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <!-- NOTIFIKASI JIKA SISWA KOSONG / LOADING -->
-      <div v-if="loadingSiswa" class="text-center py-8 bg-white rounded-xl border">
-        <p class="text-slate-500 font-medium">Memuat data siswa dari Google Spreadsheet...</p>
-      </div>
-
-      <div v-if="!loadingSiswa && filteredSiswa.length === 0 && activeTab !== 'laporan'" class="text-center py-8 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
-        <p class="font-bold">Data siswa tidak ditemukan untuk {{ filter.kelas }}!</p>
-        <p class="text-sm">Pastikan Anda telah mengisi sheet <b>DataSiswa</b> di Spreadsheet dengan kolom <b>NIS</b>, <b>Nama</b>, dan <b>Kelas</b>.</p>
-      </div>
-
-      <!-- TAB 1: INPUT MASSAL NILAI HARIAN -->
-      <section v-if="activeTab === 'harian' && filteredSiswa.length > 0" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-          <h2 class="text-lg font-bold text-indigo-900">Input Massal Nilai Harian: {{ filter.mapel }}</h2>
-          <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-1 rounded-full">{{ filteredSiswa.length }} Siswa</span>
+      <!-- TAB 1: INPUT NILAI HARIAN MASSAL -->
+      <section v-if="activeTab === 'harian'" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h2 class="font-bold text-slate-800 text-lg">Input Nilai Harian Massal - {{ filter.mapel }}</h2>
+          <button @click="simpanNilaiMassal" :disabled="loading" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center gap-2 disabled:opacity-50">
+            <i class="fa-solid fa-floppy-disk"></i> {{ loading ? 'Menyimpan...' : 'Simpan Semua Nilai' }}
+          </button>
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
               <tr>
-                <th class="p-3 w-16">No</th>
-                <th class="p-3">NIS</th>
-                <th class="p-3">Nama Siswa</th>
-                <th class="p-3 w-48">Nilai Harian (0-100)</th>
+                <th class="p-4 w-12 text-center">No</th>
+                <th class="p-4">ID / NIS</th>
+                <th class="p-4">Nama Siswa</th>
+                <th class="p-4 w-48 text-center">Nilai Harian (0-100)</th>
               </tr>
             </thead>
-            <tbody class="divide-y">
-              <tr v-for="(siswa, idx) in gridHarian" :key="siswa.nis" class="hover:bg-slate-50">
-                <td class="p-3">{{ idx + 1 }}</td>
-                <td class="p-3 font-mono text-xs">{{ siswa.nis }}</td>
-                <td class="p-3 font-semibold text-slate-800">{{ siswa.nama }}</td>
-                <td class="p-3">
-                  <input type="number" v-model.number="siswa.nilai" min="0" max="100" class="w-full border p-2 rounded-lg font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none">
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="(siswa, idx) in listSiswaMassal" :key="siswa.NIS" class="hover:bg-slate-50 transition">
+                <td class="p-4 text-center font-medium text-slate-400">{{ idx + 1 }}</td>
+                <td class="p-4 font-mono text-xs text-slate-500">{{ siswa.NIS }}</td>
+                <td class="p-4 font-medium text-slate-900">{{ siswa.Nama }}</td>
+                <td class="p-4 text-center">
+                  <input type="number" min="0" max="100" v-model.number="formMassal[siswa.NIS].nilai" class="w-24 text-center border rounded-lg p-2 font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <div class="pt-4 flex justify-end">
-          <button @click="simpanMassalHarian" :disabled="loading" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition">
-            {{ loading ? 'Menyimpan...' : 'Simpan Semua Nilai Harian' }}
-          </button>
-        </div>
       </section>
 
-      <!-- TAB 2 & 3: INPUT MASSAL UTS / ASAS -->
-      <section v-if="(activeTab === 'uts' || activeTab === 'asas') && filteredSiswa.length > 0" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-        <div class="flex justify-between items-center border-b pb-3">
-          <h2 class="text-lg font-bold text-indigo-900">Input Massal Nilai {{ activeTab.toUpperCase() }}: {{ filter.mapel }}</h2>
-          <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-1 rounded-full">{{ filteredSiswa.length }} Siswa</span>
-        </div>
+      <!-- TAB 2 & 3: INPUT UTS / ASAS MASSAL -->
+      <section v-if="activeTab === 'uts' || activeTab === 'asas'" class="space-y-6">
+        
+        <!-- Parameter Batas Maksimal & Param Syafa'at -->
+        <div class="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-bold text-indigo-900 mb-2 text-sm uppercase tracking-wide">Batas Skor Maksimal Soal</h3>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-xs text-slate-500">Max PG</label>
+                <input type="number" v-model.number="configUjian.maxPg" @input="rehitungAll" class="w-full border rounded-lg p-1.5 text-center font-semibold">
+              </div>
+              <div>
+                <label class="text-xs text-slate-500">Max Isian</label>
+                <input type="number" v-model.number="configUjian.maxIsian" @input="rehitungAll" class="w-full border rounded-lg p-1.5 text-center font-semibold">
+              </div>
+              <div>
+                <label class="text-xs text-slate-500">Max Essay</label>
+                <input type="number" v-model.number="configUjian.maxEssay" @input="rehitungAll" class="w-full border rounded-lg p-1.5 text-center font-semibold">
+              </div>
+            </div>
+          </div>
 
-        <!-- BATAS SKOR MAKSIMAL -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">1. Pengaturan Batas Skor Maksimal (Per Soal)</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Max Pilihan Ganda</label>
-              <input type="number" v-model.number="maxSkor.pg" @input="hitungSemuaUjian" class="w-full border p-2 rounded-lg font-semibold bg-white">
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Max Isian</label>
-              <input type="number" v-model.number="maxSkor.isian" @input="hitungSemuaUjian" class="w-full border p-2 rounded-lg font-semibold bg-white">
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Max Essay</label>
-              <input type="number" v-model.number="maxSkor.essay" @input="hitungSemuaUjian" class="w-full border p-2 rounded-lg font-semibold bg-white">
-            </div>
-            <div class="bg-indigo-50 p-2.5 rounded-lg border border-indigo-100 flex flex-col justify-center">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Total Skor Maksimal</span>
-              <span class="text-xl font-black text-indigo-700">{{ totalMaxSkor }}</span>
+          <div>
+            <h3 class="font-bold text-amber-900 mb-2 text-sm uppercase tracking-wide">Rentang Syafa'at Kelas</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs text-amber-800">Nilai Terendah Kelas</label>
+                <input type="number" v-model.number="configUjian.nilaiTerendah" @input="rehitungAll" class="w-full border rounded-lg p-1.5 text-center font-semibold">
+              </div>
+              <div>
+                <label class="text-xs text-amber-800">Nilai Tertinggi Kelas</label>
+                <input type="number" v-model.number="configUjian.nilaiTertinggi" @input="rehitungAll" class="w-full border rounded-lg p-1.5 text-center font-semibold">
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- TABEL GRID INPUT NILAI UTS / ASAS -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm border-collapse">
-            <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
-              <tr>
-                <th class="p-3 border-b w-10">No</th>
-                <th class="p-3 border-b">Nama Siswa</th>
-                <th class="p-3 border-b w-24">Skor PG</th>
-                <th class="p-3 border-b w-24">Skor Isian</th>
-                <th class="p-3 border-b w-24">Skor Essay</th>
-                <th class="p-3 border-b text-center bg-slate-200/50">Jml Skor</th>
-                <th class="p-3 border-b text-center bg-indigo-50 text-indigo-900">Nilai Asli</th>
-                <th class="p-3 border-b text-center bg-emerald-50 text-emerald-900">Nilai Syafa'at</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y">
-              <tr v-for="(siswa, idx) in gridUjian" :key="siswa.nis" class="hover:bg-slate-50">
-                <td class="p-3 font-medium text-slate-400">{{ idx + 1 }}</td>
-                <td class="p-3 font-semibold text-slate-800">
-                  {{ siswa.nama }}
-                  <span class="block text-xs font-normal font-mono text-slate-400">{{ siswa.nis }}</span>
-                </td>
-                <td class="p-2"><input type="number" v-model.number="siswa.pg" @input="hitungBarisUjian(siswa)" class="w-full border p-1.5 rounded text-center font-semibold"></td>
-                <td class="p-2"><input type="number" v-model.number="siswa.isian" @input="hitungBarisUjian(siswa)" class="w-full border p-1.5 rounded text-center font-semibold"></td>
-                <td class="p-2"><input type="number" v-model.number="siswa.essay" @input="hitungBarisUjian(siswa)" class="w-full border p-1.5 rounded text-center font-semibold"></td>
-                <td class="p-3 text-center font-bold bg-slate-50">{{ siswa.jumlah }}</td>
-                <td class="p-3 text-center font-black text-indigo-600 bg-indigo-50/50">{{ siswa.nilaiAsli }}</td>
-                <td class="p-3 text-center font-black text-emerald-600 bg-emerald-50/50">{{ siswa.nilaiSyafaat }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- Tabel Matriks Massal UTS/ASAS -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h2 class="font-bold text-slate-800 text-lg">Input Nilai {{ activeTab.toUpperCase() }} Massal</h2>
+            <button @click="simpanNilaiMassal" :disabled="loading" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center gap-2 disabled:opacity-50">
+              <i class="fa-solid fa-floppy-disk"></i> {{ loading ? 'Menyimpan...' : 'Simpan Semua Nilai' }}
+            </button>
+          </div>
 
-        <div class="pt-4 flex justify-between items-center border-t">
-          <p class="text-xs text-slate-400">* Nilai Syafa'at dihitung otomatis berdasarkan rentang {{ filter.kelas }} ({{ syafaatLimit.terendah }} - {{ syafaatLimit.tertinggi }}).</p>
-          <button @click="simpanMassalUjian" :disabled="loading" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition">
-            {{ loading ? 'Menyimpan...' : 'Simpan Semua Nilai ' + activeTab.toUpperCase() }}
-          </button>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase">
+                <tr>
+                  <th class="p-3 text-center">No</th>
+                  <th class="p-3">Nama Siswa</th>
+                  <th class="p-3 text-center w-20">PG</th>
+                  <th class="p-3 text-center w-20">Isian</th>
+                  <th class="p-3 text-center w-20">Essay</th>
+                  <th class="p-3 text-center">Skor Total</th>
+                  <th class="p-3 text-center">Nilai Asli</th>
+                  <th class="p-3 text-center text-emerald-600">Nilai Syafa'at</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr v-for="(siswa, idx) in listSiswaMassal" :key="siswa.NIS" class="hover:bg-slate-50 transition">
+                  <td class="p-3 text-center font-medium text-slate-400">{{ idx + 1 }}</td>
+                  <td class="p-3 font-medium text-slate-900">{{ siswa.Nama }}</td>
+                  <td class="p-3 text-center"><input type="number" v-model.number="formMassal[siswa.NIS].pg" @input="hitungBaris(siswa.NIS)" class="w-16 border rounded p-1 text-center"></td>
+                  <td class="p-3 text-center"><input type="number" v-model.number="formMassal[siswa.NIS].isian" @input="hitungBaris(siswa.NIS)" class="w-16 border rounded p-1 text-center"></td>
+                  <td class="p-3 text-center"><input type="number" v-model.number="formMassal[siswa.NIS].essay" @input="hitungBaris(siswa.NIS)" class="w-16 border rounded p-1 text-center"></td>
+                  <td class="p-3 text-center font-bold text-slate-700">{{ formMassal[siswa.NIS].jumlah }}</td>
+                  <td class="p-3 text-center font-bold text-indigo-600">{{ formMassal[siswa.NIS].nilaiAsli }}</td>
+                  <td class="p-3 text-center font-bold text-emerald-600 text-sm bg-emerald-50/50">{{ formMassal[siswa.NIS].nilaiSyafaat }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <!-- TAB 4: LAPORAN ANALISIS -->
       <section v-if="activeTab === 'laporan'" class="space-y-6">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 justify-between items-center">
-          <div class="flex gap-4">
-            <select v-model="filterLaporan.kelas" @change="fetchLaporan" class="border p-2 rounded-lg font-medium">
-              <option value="Kelas 2">Kelas 2</option>
-              <option value="Kelas 4">Kelas 4</option>
-            </select>
-            <select v-model="filterLaporan.semester" @change="fetchLaporan" class="border p-2 rounded-lg font-medium">
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-            </select>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 justify-between items-center">
+          <div class="flex items-center gap-3">
+            <label class="text-sm font-semibold">Batas KKM Kelas:</label>
+            <input type="number" v-model.number="kkm" @change="fetchLaporan" class="border w-20 p-2 text-center rounded-xl font-bold text-indigo-600 border-slate-300">
           </div>
-          <div class="flex items-center gap-2">
-            <label class="text-sm font-medium">KKM:</label>
-            <input type="number" v-model.number="kkm" @change="fetchLaporan" class="border w-16 p-1.5 text-center rounded-lg font-bold">
-          </div>
+          <button @click="fetchLaporan" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 transition">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Laporan
+          </button>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
               <tr>
                 <th class="p-4">Mata Pelajaran</th>
                 <th class="p-4 text-center">Nilai Terendah</th>
                 <th class="p-4 text-center">Nilai Tertinggi</th>
-                <th class="p-4 text-center">Tuntas / Total</th>
-                <th class="p-4 text-center">Ketercapaian KKM (%)</th>
+                <th class="p-4 text-center">Ketercapaian (Tuntas / Total)</th>
+                <th class="p-4 text-center">% Ketercapaian KKM</th>
               </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-slate-100">
               <tr v-for="item in laporanData" :key="item.mapel" class="hover:bg-slate-50">
                 <td class="p-4 font-medium text-slate-900">{{ item.mapel }}</td>
-                <td class="p-4 text-center text-rose-600 font-semibold">{{ item.terendah }}</td>
-                <td class="p-4 text-center text-emerald-600 font-semibold">{{ item.tertinggi }}</td>
-                <td class="p-4 text-center">{{ item.tuntas }} / {{ item.totalSiswa }}</td>
+                <td class="p-4 text-center text-rose-600 font-bold">{{ item.terendah }}</td>
+                <td class="p-4 text-center text-emerald-600 font-bold">{{ item.tertinggi }}</td>
+                <td class="p-4 text-center font-medium">{{ item.tuntas }} / {{ item.totalSiswa }} Siswa</td>
                 <td class="p-4 text-center">
-                  <span class="px-2.5 py-1 rounded-full text-xs font-bold" :class="item.persenTuntas >= 75 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold" :class="item.persenTuntas >= 75 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
                     {{ item.persenTuntas }}%
                   </span>
                 </td>
@@ -221,7 +228,7 @@
   </div>
 
   <script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+    // MASUKKAN URL GOOGLE APPS SCRIPT SETELAH DEPLOY UANG DI SINI
     const API_URL = "https://script.google.com/macros/s/AKfycbyQ8tCtRSOU74alxXTgoAW69IWUcTjazACG9mYbvbTZtbSYNfsiRp_qp7Y4UgBmRCbm-Q/exec";
 
     const { createApp } = Vue;
@@ -231,152 +238,138 @@
         return {
           activeTab: 'harian',
           loading: false,
-          loadingSiswa: false,
           kkm: 75,
-          siswaList: [],
-          listMapel: ["Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda"],
           filter: { kelas: 'Kelas 2', semester: '1', mapel: 'Pendidikan Agama Islam' },
-          filterLaporan: { kelas: 'Kelas 2', semester: '1' },
-          maxSkor: { pg: 15, isian: 10, essay: 15 },
-          gridHarian: [],
-          gridUjian: [],
+          listMapel: [
+            "Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", 
+            "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda"
+          ],
+          listSiswaMassal: [],
+          formMassal: {},
+          configUjian: { maxPg: 15, maxIsian: 10, maxEssay: 15, nilaiTerendah: 40, nilaiTertinggi: 90 },
           laporanData: []
         }
       },
       computed: {
-        filteredSiswa() {
-          return this.siswaList.filter(s => String(s.Kelas).trim() === this.filter.kelas);
-        },
         totalMaxSkor() {
-          return Number(this.maxSkor.pg || 0) + Number(this.maxSkor.isian || 0) + Number(this.maxSkor.essay || 0);
+          return Number(this.configUjian.maxPg || 0) + Number(this.configUjian.maxIsian || 0) + Number(this.configUjian.maxEssay || 0);
         },
         syafaatLimit() {
           return this.filter.kelas === 'Kelas 2' ? { terendah: 80, tertinggi: 90 } : { terendah: 85, tertinggi: 93 };
         }
       },
-      watch: {
-        'filter.kelas': 'initGrid',
-        'filter.mapel': 'initGrid',
-        siswaList: {
-          handler: 'initGrid',
-          deep: true
-        }
+      async mounted() {
+        await this.loadDataMassal();
       },
       methods: {
-        async fetchSiswa() {
-          this.loadingSiswa = true;
+        onKelasChange() {
+          if (this.filter.kelas === "Kelas 4") {
+            this.listMapel = [
+              "Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", 
+              "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda", "IPAS"
+            ];
+          } else {
+            this.listMapel = [
+              "Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", 
+              "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda"
+            ];
+          }
+          this.filter.mapel = this.listMapel[0];
+          this.loadDataMassal();
+        },
+        async loadDataMassal() {
+          this.loading = true;
           try {
-            const res = await fetch(`${API_URL}?action=getSiswa`);
-            this.siswaList = await res.json();
-            this.initGrid();
-          } catch (e) {
-            console.error("Gagal mengambil data siswa:", e);
+            const res = await fetch(`${API_URL}?action=getNilaiExisting&kelas=${this.filter.kelas}&semester=${this.filter.semester}&mapel=${encodeURIComponent(this.filter.mapel)}&jenis=${this.activeTab}`);
+            const data = await res.json();
+            
+            this.listSiswaMassal = data.siswa || [];
+            this.formMassal = {};
+
+            this.listSiswaMassal.forEach(s => {
+              const ex = data.nilaiExisting.find(e => String(e.NIS) === String(s.NIS)) || {};
+              this.formMassal[s.NIS] = {
+                nis: s.NIS,
+                nilai: ex.Nilai || 0,
+                pg: ex.PG || 0,
+                maxPg: ex.MaxPG || this.configUjian.maxPg,
+                isian: ex.Isian || 0,
+                maxIsian: ex.MaxIsian || this.configUjian.maxIsian,
+                essay: ex.Essay || 0,
+                maxEssay: ex.MaxEssay || this.configUjian.maxEssay,
+                jumlah: ex.Jumlah || 0,
+                nilaiAsli: ex.NilaiAsli || 0,
+                nilaiSyafaat: ex.NilaiSyafaat || 0
+              };
+            });
+          } catch (err) {
+            console.error("Gagal mengambil data:", err);
           } finally {
-            this.loadingSiswa = false;
+            this.loading = false;
           }
         },
-        onKelasChange() {
-          this.listMapel = this.filter.kelas === "Kelas 4"
-            ? ["Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda", "IPAS"]
-            : ["Pendidikan Agama Islam", "Bahasa Indonesia", "Pendidikan Pancasila", "Matematika", "Bahasa Inggris", "Seni Budaya", "PJOK", "Bahasa Sunda"];
-          this.filter.mapel = this.listMapel[0];
-          this.initGrid();
-        },
-        initGrid() {
-          const siswa = this.filteredSiswa;
+        hitungBaris(nis) {
+          const f = this.formMassal[nis];
+          f.jumlah = Number(f.pg || 0) + Number(f.isian || 0) + Number(f.essay || 0);
           
-          // Grid Harian
-          this.gridHarian = siswa.map(s => ({
-            nis: s.NIS,
-            nama: s.Nama,
-            nilai: 0
-          }));
+          if (this.totalMaxSkor > 0) {
+            f.nilaiAsli = Math.round((f.jumlah / this.totalMaxSkor) * 100);
+          } else {
+            f.nilaiAsli = 0;
+          }
 
-          // Grid Ujian (UTS / ASAS)
-          this.gridUjian = siswa.map(s => ({
-            nis: s.NIS,
-            nama: s.Nama,
-            pg: 0,
-            isian: 0,
-            essay: 0,
-            jumlah: 0,
-            nilaiAsli: 0,
-            nilaiSyafaat: 0
-          }));
-        },
-        hitungBarisUjian(row) {
-          row.jumlah = Number(row.pg || 0) + Number(row.isian || 0) + Number(row.essay || 0);
-          row.nilaiAsli = this.totalMaxSkor > 0 ? Math.round((row.jumlah / this.totalMaxSkor) * 100) : 0;
-          this.hitungSyafaatMassal();
-        },
-        hitungSemuaUjian() {
-          this.gridUjian.forEach(row => this.hitungBarisUjian(row));
-        },
-        hitungSyafaatMassal() {
-          const nilaiAsliArr = this.gridUjian.map(r => r.nilaiAsli);
-          const minAsli = Math.min(...nilaiAsliArr);
-          const maxAsli = Math.max(...nilaiAsliArr);
+          // Calculation of Syafa'at
+          const N = f.nilaiAsli;
+          const N_Min = Number(this.configUjian.nilaiTerendah || 0);
+          const N_Max = Number(this.configUjian.nilaiTertinggi || 100);
           const S_Min = this.syafaatLimit.terendah;
           const S_Max = this.syafaatLimit.tertinggi;
 
-          this.gridUjian.forEach(row => {
-            if (maxAsli - minAsli !== 0) {
-              let syafaatCalculated = S_Min + ((row.nilaiAsli - minAsli) / (maxAsli - minAsli)) * (S_Max - S_Min);
-              row.nilaiSyafaat = Math.round(syafaatCalculated);
-            } else {
-              row.nilaiSyafaat = S_Min;
-            }
-          });
+          if (N_Max - N_Min !== 0) {
+            let syafaat = S_Min + ((N - N_Min) / (N_Max - N_Min)) * (S_Max - S_Min);
+            f.nilaiSyafaat = Math.round(syafaat);
+          } else {
+            f.nilaiSyafaat = S_Min;
+          }
         },
-        async simpanMassalHarian() {
+        rehitungAll() {
+          Object.keys(this.formMassal).forEach(nis => this.hitungBaris(nis));
+        },
+        async simpanNilaiMassal() {
           this.loading = true;
+          const payloadArray = Object.values(this.formMassal).map(item => ({
+            ...item,
+            semester: this.filter.semester,
+            mapel: this.filter.mapel,
+            maxPg: this.configUjian.maxPg,
+            maxIsian: this.configUjian.maxIsian,
+            maxEssay: this.configUjian.maxEssay
+          }));
+
           try {
             await fetch(API_URL, {
               method: 'POST',
               body: JSON.stringify({
-                action: "simpanMassalHarian",
-                semester: this.filter.semester,
-                mapel: this.filter.mapel,
-                items: this.gridHarian
+                action: "simpanNilaiMassal",
+                jenis: this.activeTab,
+                payload: payloadArray
               })
             });
-            alert("Seluruh Nilai Harian berhasil disimpan & Nilai Rapor diperbarui!");
+            alert("Seluruh nilai massal berhasil disimpan & Rekap Rapor otomatis diperbarui!");
           } catch (e) {
             alert("Gagal menyimpan data massal.");
-          } fontally { this.loading = false; }
-        },
-        async simpanMassalUjian() {
-          this.loading = true;
-          try {
-            await fetch(API_URL, {
-              method: 'POST',
-              body: JSON.stringify({
-                action: "simpanMassalUjian",
-                tipeUjian: this.activeTab.toUpperCase(),
-                semester: this.filter.semester,
-                mapel: this.filter.mapel,
-                maxPg: this.maxSkor.pg,
-                maxIsian: this.maxSkor.isian,
-                maxEssay: this.maxSkor.essay,
-                items: this.gridUjian
-              })
-            });
-            alert(`Seluruh Nilai ${this.activeTab.toUpperCase()} berhasil disimpan & Nilai Rapor diperbarui!`);
-          } catch (e) {
-            alert("Gagal menyimpan data massal.");
-          } finally { this.loading = false; }
+          } finally {
+            this.loading = false;
+          }
         },
         async fetchLaporan() {
           try {
-            const res = await fetch(`${API_URL}?action=getLaporan&kelas=${this.filterLaporan.kelas}&semester=${this.filterLaporan.semester}&kkm=${this.kkm}`);
+            const res = await fetch(`${API_URL}?action=getLaporan&kelas=${this.filter.kelas}&semester=${this.filter.semester}&kkm=${this.kkm}`);
             this.laporanData = await res.json();
           } catch (e) {
-            console.error(e);
+            console.error("Gagal memuat laporan:", e);
           }
         }
-      },
-      mounted() {
-        this.fetchSiswa();
       }
     }).mount('#app')
   </script>
